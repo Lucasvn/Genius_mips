@@ -1,5 +1,5 @@
 .data
-# endereços das cores 
+# endereï¿½os das cores 
 
 firstScreen: 
 .word 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff,  0x00FFFFff, 0x00FFFFff, 0x00FFFFff,0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff,  0x00FFFFff, 0x00FFFFff, 0x00FFFFff,
@@ -42,24 +42,37 @@ jogadas:
    
          .text   
 main:
-    li $t1, 0 #contador da memória
-    li $t2, 4 #incremento do contador
-    li $t3, 4000 #tamanho máximo do contador
-   # li $t5, 0 #contador da memória
-   #li $t6, 4 #incremento do contador
-    #li $t7, 4000 #tamanho máximo do contador
+    	li $t1, 0 #contador da memï¿½ria
+    	li $t2, 4 #incremento do contador
+    	li $t3, 2044 #tamanho mï¿½ximo do contador
+    	li $t5, 0
+    	li $t6, 4
+    	li $t7, 2044
     
-loop:
-    lw $t4, secondScreen($t1) #pseudoinstrução que pega o conteúdo de "what0" com o deslocamento de $t1
-    sw $t4, secondScreen($t1) #grava o conteúdo que foi resgatado anteriormente na mesma posição que foi resgatada
-    			#Esta instrução fará que o bitmap desenhe na tela.
-    addu $t1, $t1, $t2 #incrementa o deslocamento em 4 unidades (próxima posição de memória)
-    bne $t1, $t3, loop  #reinicia o loop
+telaInicial:
+    lw $t4, firstScreen($t1) #pseudoinstruï¿½ï¿½o que pega o conteï¿½do de "what0" com o deslocamento de $t1
+    sw $t4, firstScreen($t1) #grava o conteï¿½do que foi resgatado anteriormente na mesma posiï¿½ï¿½o que foi resgatada
+    			#Esta instruï¿½ï¿½o farï¿½ que o bitmap desenhe na tela.
+    addu $t1, $t1, $t2 #incrementa o deslocamento em 4 unidades (prï¿½xima posiï¿½ï¿½o de memï¿½ria)
+    bne $t1, $t3, telaInicial  #reinicia o loop
     
-    ######essa parte não está funcionando direito ####
-# loop2:
-#   lw $t4, secondScreen($t5) #pseudoinstrução que pega o conteúdo de "what0" com o deslocamento de $t1
-#    sw $t4, secondScreen($t5) #grava o conteúdo que foi resgatado anteriormente na mesma posição que foi resgatada
-#    			#Esta instrução fará que o bitmap desenhe na tela.
-#    addu $5, $t5, $t6 #incrementa o deslocamento em 4 unidades (próxima posição de memória)
-#    bne $t5, $t7, loop2  #reinicia o loop
+resetaTela:
+	la $s1, firstScreen
+ 	la $s2, secondScreen
+ 	
+ 	add $s4, $s2, $t5
+ 	add $s5, $s1, $t5
+ 	
+ 	lw $s3, 0($s4)
+ 	sw $s3, 0($s5)
+ 	
+ 	addu $t5, $t5, $t6 #incrementa o deslocamento em 4 unidades (prï¿½xima posiï¿½ï¿½o de memï¿½ria)
+   	bne $t5, $t7, resetaTela  #reinicia o loop
+    
+ telaJogo:
+ 	
+    	lw $t4, secondScreen($t5) #pseudoinstruï¿½ï¿½o que pega o conteï¿½do de "what0" com o deslocamento de $t1
+   	sw $t4, secondScreen($t5) #grava o conteï¿½do que foi resgatado anteriormente na mesma posiï¿½ï¿½o que foi resgatada
+    			#Esta instruï¿½ï¿½o farï¿½ que o bitmap desenhe na tela.
+    	addu $t5, $t5, $t6 #incrementa o deslocamento em 4 unidades (prï¿½xima posiï¿½ï¿½o de memï¿½ria)
+   	bne $t5, $t7, telaJogo  #reinicia o loop
