@@ -20,7 +20,7 @@ firstScreen:
 .word 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff,  0x00FFFFff, 0x00FFFFff, 0x00FFFFff,0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff, 0x00FFFFff,  0x00FFFFff, 0x00FFFFff, 0x00FFFFff,
 
 verdeApagado:	.word 0x001adb00
-vermelhoApagado:.word 0x00e60f00
+vermelhoApagado:.word 0x00d41717
 amareloApagado:	.word 0x00f7fa66
 azulApagado:	.word 0x00001edb
 preto:		.word 0x00000000
@@ -29,7 +29,6 @@ verdeAceso:	.word 0x001eff00
 vermelhoAceso:	.word 0x00ff1100
 amareloAceso:	.word 0x00fbff1c
 azulAceso:	.word 0x00425cff
-telaJogo:	.word 0x10010000
 msgCor:		.asciiz "Digite uma cor: \n1 - Vermelho\n2 - Verde\n3 - Azul\n4 - Amarelo\nEntrada: "
 
 
@@ -99,36 +98,76 @@ jogadas:
          	addi $a0, $zero,700
          	syscall
          .end_macro
+         
+         # recebe um numero entre 1 e 5 para carregar seu desenho
+         # no registrador $t1
+         .macro select_numero(%numero)
+         	beq %numero, 1, set_um
+         	beq %numero, 2, set_dois
+         	beq %numero, 3, set_tres
+         	beq %numero, 4, set_quatro
+         	beq %numero, 5, set_cinco
+         	
+         	set_um:
+         		la $t1, numero_um
+         		j exit
+         	set_dois:
+         		la $t1, numero_dois
+         		j exit
+         	set_tres:
+         		la $t1, numero_tres
+         		j exit
+         	set_quatro:
+         		la $t1, numero_quatro
+         		j exit
+         	set_cinco:
+         		la $t1, numero_cinco
+         	exit:
+         .end_macro
+         
 	# posição inicial do placar de cada player:
 	# player 1 - 32
 	# player 2 - 116
-	.macro print_number(%player)
+	
+	# macro para atualizar a pontuação de um player no placar
+	.macro updatePlacar(%player, %valor) 
+		# %player = posição inicial do placar do player
+		# %valor = nova pontuação do player
 		add $t2, $zero, %player # contador começa na primeira posição do placar do player
-		addi $t3, $t2,  20
+		addi $t3, $t2,  20 # limite da alura do numero = (5 pixeis * 4)
 		
-		add $t4, $s1, %player
+		add $t4, $s1, %player # carrega a primeira posição do placar deste jogador em relação
 		
- 		la $t1, numero_dois # carrega a primeira posição do desenho do numero
-		lacoAltura:
+ 		select_numero(%valor) # seleciona o desenho do numero
+ 		
+ 		# while ($t2 != $t3) do
+		lacoHeight:
 			add $t5, $zero, $t4 # contador que começa na primeira posição da linha atual
 			addi $t6, $t5, 12 # cada linha tem apenas 3 pixeis de largura (3*4 = 12)
 		
-			lacoLinha:
+			# while ($t5 != $t6) do
+			lacoWidth:
 				add $t7, $zero, $t1
-				lw $s4, 0($t7) # carrega o pixel da posição atual do desenho
- 				sw $s4, 0($t5) # insere esse pixel no bitmap
+				lw $t8, 0($t7) # carrega o pixel da posição atual do desenho
+ 				sw $t8, 0($t5) # insere esse pixel no bitmap
  				addi $t5, $t5, 4 
  				addi $t1, $t1, 4 # percorrendo o numero
- 				bne $t6, $t5, lacoLinha
- 			add $t4, $t4, 128
- 			addi $t2, $t2, 4
+ 				bne $t6, $t5, lacoWidth
+ 			# end
  			
- 			bne $t3, $t2, lacoAltura
+ 			add $t4, $t4, 128 # pulando a linha
+ 			addi $t2, $t2, 4 # incrementa $t2
+ 			
+ 			bne $t3, $t2, lacoHeight
+ 		# end
 				
 				
 	.end_macro
 	
+	# macro para desenhar uma das quatro cores no bitmap
 	.macro printCor(%quadrante,%cor)
+		# %quadrante = primeira posição do quadrante onde deve ser desenhada a cor
+		# %cor = posição na memoria da cor a ser pintada
 		add $t2, $zero, %quadrante # contador começa na primeira posição do quadrante		
 		addi $t3, $t2, 20 # limite do contador = quantidade de linhas por quadrante * 4
 		
@@ -150,12 +189,12 @@ jogadas:
 	.end_macro
 	
 	.macro piscarVermelho()
-		add $t0, $zero, 768
-   		lw $t1, vermelhoAceso
-   		printCor($t0, $t1)
-   		sleep()
-   		lw $t1, vermelhoApagado
-   		printCor($t0, $t1)
+		add $t0, $zero, 768 # seleciona a primeira posição do quadrante destinado a cor vermelha
+   		lw $t1, vermelhoAceso # carrega a cor acesa
+   		printCor($t0, $t1) # pinta a cor acesa
+   		sleep() # espera 700ms com a cor acesa
+   		lw $t1, vermelhoApagado # carrega a cor apagada
+   		printCor($t0, $t1) # pinta a cor apagada
 	.end_macro
 	
 	.macro piscarVerde()
@@ -185,6 +224,8 @@ jogadas:
    		printCor($t0, $t1)
 	.end_macro
 	
+	# macro que recebe um numero entre 1 e 4
+	# e pisca a cor correspondente a este numero
 	.macro selectCor(%input)
 		beq %input, 1, vermelho
 		beq %input, 2, verde
@@ -212,6 +253,8 @@ jogadas:
 	# 2º quadrante - 832
 	# 3º quadrante - 1408
 	# 4º quadrante - 1472
+	
+	# macro que pinta as 4 cores apagadas
 	.macro printQuadrantes()
 		li $t0, 768
 		lw $t1, vermelhoApagado
@@ -264,7 +307,8 @@ TelaJogo:
   	
   	selectCor($v0)
   	
-  	li $t0, 116
-  	print_number($t0)
+  	li $t0, 32
+  	li $t1, 1
+  	updatePlacar($t0, $t1)
   	
 
